@@ -773,29 +773,3 @@ button {
     grid-template-columns: 1fr;
   }
 }
-/* Menu Bar */
-.main-menu {
-  max-width: 1200px;
-  margin: 0 auto 10px auto;
-  padding: 6px 10px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  justify-content: flex-start;
-}
-
-.main-menu button {
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.7);
-  background: var(--bg-panel);
-  color: var(--text-sub);
-  font-size: 12px;
-  padding: 4px 10px;
-  cursor: pointer;
-}
-
-.main-menu button.active {
-  border-color: var(--accent-cyan);
-  color: var(--accent-cyan);
-  background: rgba(34, 211, 238, 0.08);
-}
