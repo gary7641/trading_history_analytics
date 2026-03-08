@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Signal Portal</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg1:#0a0e27;--bg2:#1a1f3a;--txt1:#2525e4;--txt2:#aba8a0;--cyan:#0d9fff;--purple:#9d4edd;--green:#06d6a0;--red:#ef476f;--border:#2d3354}
+[data-theme="light"]{--bg1:white;--bg2:#f7f7f9;--txt1:#1a1f3a;--txt2:rgba(0,0,0,.7);--border:#dee2e6}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg1);color:var(--txt1);display:flex;align-items:center;gap:1px;background:var(--txt2);overflow-y:auto;z-index:1}
+.sidebar{position:fixed;left:0;top:0;width:240px;height:100vh;background:var(--bg2);border-right:1px solid var(--border);padding:20px;overflow-y:auto;z-index:10}
+.nav-label{font-size:11px;text-transform:uppercase;color:var(--txt2);margin-bottom:8px;font-weight:600;letter-spacing:.5px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;color:var(--txt2);cursor:pointer;transition:.2s;margin-bottom:4px;font-size:14px}
+.nav-item:hover{background:var(--bg1);color:var(--txt1)}
+.nav-item.active{background:linear-gradient(135deg,var(--cyan),var(--purple));color:#fff;border:0}
+.header{position:fixed;top:0;left:240px;right:0;height:64px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:5}
+.header-right{display:flex;align-items:center;gap:20px}
+avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;gap:10px}
+.main{margin-left:240px;margin-top:64px;padding:24px;min-height:calc(100vh - 64px)}
+.page{display:none;page.active{display:block}
+.page-title{font-size:28px;font-weight:700;margin-bottom:18px}
+.filter-bar{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+.tab-btn{padding:7px 16px;border-radius:12px;background:var(--bg2);border:1px solid var(--border);color:var(--txt2);cursor:pointer;font-size:13px;transition:.2s}
+.tab-btn:hover{border-color:var(--cyan);color:var(--txt1)}
+.tab-btn.active{background:linear-gradient(135deg,var(--cyan),var(--purple));color:#fff;border:0}
+.btn-primary{background:linear-gradient(135deg,var(--cyan),var(--purple));color:#fff;padding:10px 22px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:.2s}
+.btn-primary:hover{transform:translate(-1px,-2px);box-shadow:6px 24px,0,rgba(13,158,255,.3)}
+.btn-sec{background:var(--bg2);color:var(--txt1);padding:10px 22px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:.2s}
+.btn-logout{background:var(--red);color:#fff;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600}
+.btn-sec:hover{border-color:var(--cyan);color:var(--txt1)}
+.empty{text-align:center;padding:60px 30px;color:var(--txt2)}
+.empty-title{font-size:18px;font-weight:600;margin-bottom:6px}
+.card{display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid var(--border)}
+.badge{padding:5px 10px;border-radius:8px;font-size:11px;font-weight:600;text-transform:uppercase}
+.badge.public{background:rgba(6,214,160,.2);color:var(--green)}
+.badge.inactive{background:rgba(239,71,111,.2);color:var(--red)}
+.stat-label{font-size:11px;color:var(--txt2);margin-bottom:5px}
+.stat-val{font-size:14px;font-weight:600}
+.stat-val.pos{color:var(--green)}
+.stat-val.neg{color:var(--red)}
+.card-foot{display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid var(--border)}
+.signal-name{font-size:19px;font-weight:700}
+.signal-broker{font-size:12px;color:var(--txt2);margin-bottom:3px}
+.badge-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.stat-label{font-size:11px;color:var(--txt2);margin-bottom:5px}
+.btn-logout{background:var(--red);color:#fff;border:none;padding:7px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600}
+modal{display:none;position:fixed;z-index:999;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.7);align-items:center;justify-content:center}
+.modal.active{display:flex}
+.modal-content{background:var(--bg2);border-radius:12px;padding:24px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto}
+.modal-title{font-size:20px;font-weight:700;margin-bottom:20px}
+.form-group{margin-bottom:16px}
+label{display:block;font-size:13px;margin-bottom:6px;color:var(--txt2)}
+input,select,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg1);color:var(--txt1);font-size:14px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--cyan)}
+checkbox{width:auto;margin-right:6px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.portfolio-tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.portfolio-tab{padding:8px 16px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);color:var(--txt2);cursor:pointer;font-size:13px;transition:.2s}
+.portfolio-tab:hover{border-color:var(--cyan);color:var(--txt1)}
+.portfolio-tab.active{background:linear-gradient(135deg,var(--cyan),var(--purple));color:#fff;border:0}
+.sub-nav{margin-left:20px;display:none}
+.sub-nav.show{display:block}
+.user-avatar{width:34px;height:34px;border-radius:50%;border:2px solid var(--cyan);object-fit:cover}
+.like-comment{display:flex;gap:12px;align-items:center;font-size:13px;color:var(--txt2)}
+.like-btn,.comment-btn{background:none;border:none;color:var(--txt2);cursor:pointer;display:flex;align-items:center;gap:4px;font-size:13px;transition:.2s}
+.like-btn:hover{color:var(--red)}
+.comment-btn:hover{color:var(--cyan)}
+.like-btn.liked{color:var(--red)}
+.group-item{padding:6px 12px;margin-left:20px;font-size:13px;color:var(--txt2);cursor:pointer;border-radius:6px;transition:.2s}
+.group-item:hover{background:var(--bg1);color:var(--txt1)}
+.group-item.active{background:linear-gradient(135deg,var(--cyan),var(--purple));color:#fff}
+</style>
+</head>
+<body data-theme="light">
+
+<div class="sidebar">
+<div class="nav-label">NAVIGATION</div>
+<div class="nav-item" onclick="showPage('home')">🏠 Home</div>
+<div class="nav-item" onclick="showPage('mysignals')">📊 My Signals</div>
+<div id="mySignalsSubNav" class="sub-nav"></div>
+<div class="nav-item" onclick="showPage('mygroups')">👥 My Groups</div>
+<div id="myGroupsSubNav" class="sub-nav"></div>
+<div class="nav-item" onclick="showPage('mylikes')">❤️ My Liked Signals</div>
+<div class="nav-label" style="margin-top:20px">TOOLS</div>
+<div class="nav-item" onclick="showPage('fxtools')">📈 FX Tools</div>
+</div>
+
+<div class="header">
+<div style="font-size:20px;font-weight:700">🔔 AI Signal Portal</div>
+<div class="header-right">
+<img src="https://ui-avatars.com/api/?name=Gary+CY&background=0d9fff&color=fff&size=128" class="user-avatar" alt="User Avatar" />
+<span style="font-size:14px;color:var(--txt1)">GARY CY (麻麻)</span>
+<select onchange="document.body.dataset.theme=this.value" style="width:auto;padding:6px;font-size:13px">
+<option value="light">Light</option>
+<option value="dark">Dark</option>
+</select>
+<button class="btn-logout" onclick="alert('Logout')">Logout</button>
+</div>
+</div>
+
+<div class="main">
+<div id="homePage" class="page active">
+<h1 class="page-title">Home - Ranking</h1>
+<div class="filter-bar">
+<button class="tab-btn active" onclick="filterSignals('all')">All Public Signals</button>
+<button class="tab-btn" onclick="filterSignals('top')">Top Performers</button>
+</div>
+<div id="homeSignals"></div>
+</div>
+
+<div id="mysignalsPage" class="page">
+<h1 class="page-title">My Signals</h1>
+<div style="display:flex;gap:12px;margin-bottom:20px">
+<button class="btn-primary" onclick="openModal('newPortfolio')">+ Portfolio</button>
+<button class="btn-primary" onclick="openModal('newSignal')">+ Signal</button>
+</div>
+<div id="portfolioTabsContainer" class="portfolio-tabs"></div>
+<div id="mySignalsContainer"></div>
+</div>
+
+<div id="mygroupsPage" class="page">
+<h1 class="page-title">My Groups</h1>
+<button class="btn-primary" onclick="openModal('newGroup')" style="margin-bottom:20px">+ Create Group</button>
+<div id="myGroupsContainer"></div>
+</div>
+
+<div id="mylikesPage" class="page">
+<h1 class="page-title">My Liked Signals</h1>
+<div id="myLikesContainer"></div>
+</div>
+
+<div id="fxtoolsPage" class="page">
+<h1 class="page-title">FX Tools</h1>
+<div class="empty"><div class="empty-title">FX Tools Coming Soon</div><p>Calculators and analysis tools will be available here</p></div>
+</div>
+</div>
+
+<div id="newPortfolioModal" class="modal">
+<div class="modal-content">
+<h2 class="modal-title">Create New Portfolio</h2>
+<div class="form-group"><label>Portfolio Name</label><input type="text" id="portfolioName" placeholder="Enter portfolio name" /></div>
+<div class="modal-actions">
+<button class="btn-sec" onclick="closeModal('newPortfolio')">Cancel</button>
+<button class="btn-primary" onclick="createPortfolio()">Create</button>
+</div>
+</div>
+</div>
+
+<div id="newSignalModal" class="modal">
+<div class="modal-content">
+<h2 class="modal-title">Add New Signal</h2>
+<div class="form-group"><label>Signal Name</label><input type="text" id="signalName" placeholder="My EA Signal" /></div>
+<div class="form-group"><label>Portfolio</label><select id="signalPortfolio"></select></div>
+<div class="form-group"><label>Broker Account No.</label><input type="text" id="brokerAccount" placeholder="123456789" /></div>
+<div class="form-group"><label>Server</label><input type="text" id="serverName" placeholder="Vantage-Live" /></div>
+<div class="form-group"><label>Investor Password</label><input type="password" id="investorPassword" placeholder="Read-only password" /></div>
+<div class="form-group"><label><input type="checkbox" id="isPublic" /> Make Public</label></div>
+<div class="modal-actions">
+<button class="btn-sec" onclick="closeModal('newSignal')">Cancel</button>
+<button class="btn-primary" onclick="createSignal()">Add Signal</button>
+</div>
+</div>
+</div>
+
+<div id="newGroupModal" class="modal">
+<div class="modal-content">
+<h2 class="modal-title">Create New Group</h2>
+<div class="form-group"><label>Group Name</label><input type="text" id="groupName" placeholder="My Trading Group" /></div>
+<div class="form-group"><label>Description</label><textarea id="groupDesc" placeholder="Group description" rows="3"></textarea></div>
+<div class="form-group"><label><input type="checkbox" id="groupPublic" /> Public Group</label></div>
+<div class="form-group"><label><input type="checkbox" id="groupOpenAdd" /> Allow others to add signals</label></div>
+<div class="modal-actions">
+<button class="btn-sec" onclick="closeModal('newGroup')">Cancel</button>
+<button class="btn-primary" onclick="createGroup()">Create Group</button>
+</div>
+</div>
+</div>
+
+<script>
+let currentUser='GARY CY';
+let data=JSON.parse(localStorage.getItem('aispdata')||'{"portfolios":[],"signals":[],"groups":[],"likes":[]}');
+
+function save(){localStorage.setItem('aispdata',JSON.stringify(data));}
+
+function showPage(p){
+document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+const pg=document.getElementById(p+'Page');
+if(pg) pg.classList.add('active');
+const navItems=document.querySelectorAll('.nav-item');
+navItems.forEach(x=>{if(x.getAttribute('onclick')&&x.getAttribute('onclick').includes("'"+p+"'")) x.classList.add('active');});
+if(p==='home') renderHome();
+if(p==='mysignals'){renderPortfolioTabs();renderMySignals('all');}
+if(p==='mygroups') renderMyGroups();
+if(p==='mylikes') renderMyLikes();
+}
+
+function openModal(name){
+if(name==='newSignal') populatePortfolioSelect();
+document.getElementById('new'+name.charAt(0).toUpperCase()+name.slice(1)+'Modal').classList.add('active');
+}
+function closeModal(name){
+document.getElementById('new'+name.charAt(0).toUpperCase()+name.slice(1)+'Modal').classList.remove('active');
+}
+
+function createPortfolio(){
+const n=document.getElementById('portfolioName').value.trim();
+if(!n){alert('Please enter a name');return;}
+data.portfolios.push({id:Date.now(),name:n,owner:currentUser});
+save();
+closeModal('newPortfolio');
+document.getElementById('portfolioName').value='';
+renderPortfolioTabs();
+renderMySignalsSubNav();
+}
+
+function createSignal(){
+const n=document.getElementById('signalName').value.trim();
+if(!n){alert('Please enter signal name');return;}
+const s={
+id:Date.now(),name:n,
+portfolio:document.getElementById('signalPortfolio').value,
+broker:document.getElementById('brokerAccount').value,
+server:document.getElementById('serverName').value,
+password:document.getElementById('investorPassword').value,
+public:document.getElementById('isPublic').checked,
+owner:currentUser,
+balance:(Math.random()*50000+10000).toFixed(2),
+equity:(Math.random()*50000+10000).toFixed(2),
+growth:(Math.random()*200+10).toFixed(2),
+pnl:(Math.random()*5000-1000).toFixed(2),
+trades:Math.floor(Math.random()*500+50),
+win:(Math.random()*40+50).toFixed(1),
+likes:0
+};
+data.signals.push(s);
+save();
+closeModal('newSignal');
+document.getElementById('signalName').value='';
+document.getElementById('brokerAccount').value='';
+document.getElementById('serverName').value='';
+document.getElementById('investorPassword').value='';
+renderMySignals('all');
+renderMySignalsSubNav();
+renderHome();
+}
+
+function createGroup(){
+const n=document.getElementById('groupName').value.trim();
+if(!n){alert('Please enter group name');return;}
+const g={
+id:Date.now(),name:n,
+desc:document.getElementById('groupDesc').value,
+public:document.getElementById('groupPublic').checked,
+allowAdd:document.getElementById('groupOpenAdd').checked,
+owner:currentUser,
+signals:[],
+members:[currentUser]
+};
+data.groups.push(g);
+save();
+closeModal('newGroup');
+document.getElementById('groupName').value='';
+document.getElementById('groupDesc').value='';
+renderMyGroups();
+renderMyGroupsSubNav();
+}
+
+function toggleLike(sigId){
+const idx=data.likes.indexOf(sigId);
+const sig=data.signals.find(s=>s.id==sigId);
+if(!sig) return;
+if(idx>-1){
+data.likes.splice(idx,1);
+sig.likes=Math.max(0,(sig.likes||0)-1);
+}else{
+data.likes.push(sigId);
+sig.likes=(sig.likes||0)+1;
+}
+save();
+renderHome();
+renderMyLikes();
+}
+
+function signalCard(s,showPortfolio){
+const liked=data.likes.includes(s.id);
+const pnl=parseFloat(s.pnl);
+return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
+<div style="display:flex;justify-content:space-between;align-items:flex-start">
+<div>
+<div class="signal-broker">${s.broker||'Demo Broker'} | ${s.server||'MT4'}</div>
+<div class="signal-name">${s.name}</div>
+${showPortfolio&&s.portfolio?`<div style="font-size:12px;color:var(--txt2);margin-top:3px">Portfolio: ${s.portfolio}</div>`:''}
+</div>
+<div style="display:flex;gap:8px;align-items:center">
+${s.public?'<span class="badge public">Public</span>':''}
+</div>
+</div>
+<div class="stats" style="margin-top:16px">
+<div><div class="stat-label">Balance</div><div class="stat-val">$${parseFloat(s.balance).toLocaleString()}</div></div>
+<div><div class="stat-label">Growth</div><div class="stat-val pos">+${s.growth}%</div></div>
+<div><div class="stat-label">P&L</div><div class="stat-val ${pnl>=0?'pos':'neg'}">${pnl>=0?'+':''}$${parseFloat(pnl).toFixed(2)}</div></div>
+<div><div class="stat-label">Win Rate</div><div class="stat-val">${s.win}%</div></div>
+</div>
+<div class="like-comment">
+<button class="like-btn ${liked?'liked':''}" onclick="toggleLike(${s.id})">\u2764 ${s.likes||0}</button>
+<button class="comment-btn" onclick="alert('Comments coming soon!')">\u{1F4AC} 0</button>
+<span style="margin-left:auto;font-size:12px;color:var(--txt2)">${s.trades||0} trades</span>
+</div>
+</div>`;
+}
+
+function renderHome(){
+const el=document.getElementById('homeSignals');
+const pub=data.signals.filter(s=>s.public);
+if(!pub.length){el.innerHTML='<div class="empty"><div class="empty-title">No public signals yet</div><p>Add a signal and make it public</p></div>';return;}
+el.innerHTML=pub.map(s=>signalCard(s,false)).join('');
+}
+
+let curPortfolio='all';
+function renderPortfolioTabs(){
+const el=document.getElementById('portfolioTabsContainer');
+let html=`<div class="portfolio-tab ${curPortfolio==='all'?'active':''}" onclick="filterMySignals('all')">All</div>`;
+data.portfolios.filter(p=>p.owner===currentUser).forEach(p=>{
+html+=`<div class="portfolio-tab ${curPortfolio===p.name?'active':''}" onclick="filterMySignals('${p.name}')">${p.name}</div>`;
+});
+el.innerHTML=html;
+}
+function filterMySignals(portfolio){
+curPortfolio=portfolio;
+renderPortfolioTabs();
+renderMySignals(portfolio);
+}
+function renderMySignals(filter){
+const el=document.getElementById('mySignalsContainer');
+let signals=data.signals.filter(s=>s.owner===currentUser);
+if(filter&&filter!=='all') signals=signals.filter(s=>s.portfolio===filter);
+if(!signals.length){el.innerHTML='<div class="empty"><div class="empty-title">No signals yet</div><p>Add your first signal</p></div>';return;}
+el.innerHTML=signals.map(s=>signalCard(s,true)).join('');
+}
+function renderMySignalsSubNav(){
+const el=document.getElementById('mySignalsSubNav');
+let html='';
+data.portfolios.filter(p=>p.owner===currentUser).forEach(p=>{
+html+=`<div class="group-item" onclick="showPage('mysignals');filterMySignals('${p.name}')">${p.name}</div>`;
+});
+el.innerHTML=html;
+if(html) el.classList.add('show');
+}
+function populatePortfolioSelect(){
+const sel=document.getElementById('signalPortfolio');
+sel.innerHTML='<option value="">-- No Portfolio --</option>';
+data.portfolios.filter(p=>p.owner===currentUser).forEach(p=>{
+sel.innerHTML+=`<option value="${p.name}">${p.name}</option>`;
+});
+}
+function filterSignals(mode){
+document.querySelectorAll('.filter-bar .tab-btn').forEach(b=>b.classList.remove('active'));
+event.target.classList.add('active');
+renderHome();
+}
+function renderMyGroups(){
+const el=document.getElementById('myGroupsContainer');
+const mine=data.groups.filter(g=>g.owner===currentUser||g.members.includes(currentUser));
+if(!mine.length){el.innerHTML='<div class="empty"><div class="empty-title">No groups yet</div><p>Create your first group!</p></div>';return;}
+el.innerHTML=mine.map(g=>`
+<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
+<div style="display:flex;justify-content:space-between;align-items:flex-start">
+<div>
+<div style="font-size:18px;font-weight:700">${g.name}</div>
+${g.desc?`<div style="font-size:13px;color:var(--txt2);margin-top:4px">${g.desc}</div>`:''}
+</div>
+<div style="display:flex;gap:8px">
+${g.public?'<span class="badge public">Public</span>':'<span class="badge inactive">Private</span>'}
+${g.owner===currentUser?'<span style="font-size:11px;background:rgba(13,158,255,.2);color:var(--cyan);padding:4px 8px;border-radius:6px">Owner</span>':''}
+</div>
+</div>
+<div style="font-size:12px;color:var(--txt2);margin-top:8px">${g.allowAdd?'\u2714 Others can add signals':'\u2718 Only owner can add signals'} | ${g.signals?g.signals.length:0} signals | ${g.members.length} members</div>
+</div>`).join('');
+}
+function renderMyGroupsSubNav(){
+const el=document.getElementById('myGroupsSubNav');
+const mine=data.groups.filter(g=>g.owner===currentUser);
+let html=mine.map(g=>`<div class="group-item" onclick="showPage('mygroups')">${g.name}</div>`).join('');
+el.innerHTML=html;
+if(html) el.classList.add('show');
+}
+function renderMyLikes(){
+const el=document.getElementById('myLikesContainer');
+const liked=data.signals.filter(s=>data.likes.includes(s.id));
+if(!liked.length){el.innerHTML='<div class="empty"><div class="empty-title">No liked signals yet</div><p>Like a signal to find it here</p></div>';return;}
+el.innerHTML=liked.map(s=>signalCard(s,true)).join('');
+}
+
+// Init
+renderMySignalsSubNav();
+renderMyGroupsSubNav();
+renderHome();
+</script>
+</body>
+</html>
