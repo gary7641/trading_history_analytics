@@ -1340,3 +1340,234 @@ function renderSwot(swot) {
     ? swot.centerAnalysis.join("<br>")
     : "";
 }
+
+function buildAccountStats(trades, options = {}) {
+  const ACCOUNT_CCY = options.currency || 'USD';
+  const initialEquity = options.initialEquity != null ? options.initialEquity : 0;
+
+  const stats = {
+    currency: ACCOUNT_CCY,
+    initialEquity,
+    finalEquity: initialEquity,
+    startDate: null,
+    endDate: null,
+    days: 0,
+    totalTrades: 0,
+
+    grossProfit: 0,
+    grossLoss: 0,
+    netProfit: 0,
+    netProfitPct: 0,
+
+    growth: {
+      netProfit: 0,
+      netProfitPct: 0,
+      cagrPct: 0,
+      periodDays: 0,
+      periodLabel: '',
+      totalTrades: 0,
+      tradesPerDay: 0
+    },
+
+    risk: {
+      winRatePct: 0,
+      lossRatePct: 0,
+      profitFactor: 0,
+      maxDrawdownPct: 0,
+      maxDrawdownValue: 0,
+      expectancyPerTrade: 0,
+      avgWin: 0,
+      avgLoss: 0,
+      activityPerDay: 0
+    },
+
+    radar: {
+      algoQuality: 0,
+      winRate: 0,
+      lossControl: 0,
+      riskReturn: 0,
+      activity: 0
+    }
+  };
+
+  if (!trades || trades.length === 0) {
+    return stats;
+  }
+
+  // ---------- 基礎時間 & 數量 ----------
+  stats.totalTrades = trades.length;
+  stats.startDate = new Date(trades[0].closeTime);
+  stats.endDate = new Date(trades[trades.length - 1].closeTime);
+
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const rawDays = (stats.endDate - stats.startDate) / msPerDay;
+  stats.days = rawDays > 0 ? rawDays : 1; // 避免除 0
+
+  // ---------- 金額累計 & Equity Curve ----------
+  let equity = initialEquity;
+  let equityPeak = initialEquity;
+  let maxDDValue = 0;
+
+  let grossProfit = 0;
+  let grossLoss = 0;
+  let winCount = 0;
+  let lossCount = 0;
+  let winSum = 0;
+  let lossSum = 0;
+
+  trades.forEach((t) => {
+    const pl = (t.profit || 0) + (t.swap || 0) + (t.commission || 0);
+
+    // Equity 更新
+    equity += pl;
+    if (equity > equityPeak) {
+      equityPeak = equity;
+    }
+    const ddValue = equityPeak - equity;
+    if (ddValue > maxDDValue) {
+      maxDDValue = ddValue;
+    }
+
+    // 利潤分類
+    if (pl > 0) {
+      grossProfit += pl;
+      winCount += 1;
+      winSum += pl;
+    } else if (pl < 0) {
+      grossLoss += pl; // 負數
+      lossCount += 1;
+      lossSum += pl;
+    }
+  });
+
+  stats.finalEquity = equity;
+  stats.grossProfit = grossProfit;
+  stats.grossLoss = grossLoss;
+  stats.netProfit = grossProfit + grossLoss;
+
+  if (initialEquity > 0) {
+    stats.netProfitPct = (stats.netProfit / initialEquity) * 100;
+  }
+
+  // ---------- Growth 區 ----------
+  stats.growth.netProfit = stats.netProfit;
+  stats.growth.netProfitPct = stats.netProfitPct;
+  stats.growth.periodDays = stats.days;
+  stats.growth.periodLabel =
+    stats.startDate.toISOString().slice(0, 10) +
+    ' ~ ' +
+    stats.endDate.toISOString().slice(0, 10);
+  stats.growth.totalTrades = stats.totalTrades;
+  stats.growth.tradesPerDay = stats.totalTrades / stats.days;
+
+  // 年化回報 (CAGR)
+  if (initialEquity > 0 && stats.days > 0) {
+    const years = stats.days / 365;
+    const ratio = stats.finalEquity / initialEquity;
+    if (ratio > 0 && years > 0) {
+      const cagr = Math.pow(ratio, 1 / years) - 1;
+      stats.growth.cagrPct = cagr * 100;
+    }
+  }
+
+  // ---------- Risk 區 ----------
+  const totalTrades = stats.totalTrades;
+  const Pw = totalTrades > 0 ? winCount / totalTrades : 0;
+  const Pl = totalTrades > 0 ? lossCount / totalTrades : 0;
+
+  const avgWin = winCount > 0 ? winSum / winCount : 0;
+  const avgLoss = lossCount > 0 ? lossSum / lossCount : 0; // 負數
+
+  stats.risk.winRatePct = Pw * 100;
+  stats.risk.lossRatePct = Pl * 100;
+  stats.risk.avgWin = avgWin;
+  stats.risk.avgLoss = avgLoss;
+
+  // Profit Factor
+  if (grossLoss < 0) {
+    stats.risk.profitFactor = grossProfit / Math.abs(grossLoss);
+  }
+
+  // Max Drawdown
+  stats.risk.maxDrawdownValue = maxDDValue;
+  if (equityPeak > 0) {
+    stats.risk.maxDrawdownPct = (maxDDValue / equityPeak) * 100;
+  }
+
+  // Expectancy per trade（簡化版）
+  stats.risk.expectancyPerTrade =
+    totalTrades > 0 ? stats.netProfit / totalTrades : 0;
+
+  // 或想用更嚴謹版本：Pw*avgWin - Pl*|avgLoss| [web:117][web:123]
+  // const expectancy =
+  //   Pw * avgWin - Pl * Math.abs(avgLoss);
+  // stats.risk.expectancyPerTrade = expectancy;
+
+  stats.risk.activityPerDay = stats.growth.tradesPerDay;
+
+  // ---------- Radar ----------
+  stats.radar = buildEaRadarMetrics(stats);
+
+  return stats;
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function buildEaRadarMetrics(stats) {
+  const radar = {
+    algoQuality: 0,
+    winRate: 0,
+    lossControl: 0,
+    riskReturn: 0,
+    activity: 0
+  };
+
+  const risk = stats.risk || {};
+  const growth = stats.growth || {};
+
+  // ---------- Win Rate ----------
+  radar.winRate = clamp(risk.winRatePct || 0, 0, 100);
+
+  // ---------- Loss Control（Max DD 越細越高分） ----------
+  const maxDD = risk.maxDrawdownPct || 0;
+  // 你可以之後調整 2 呢個係數
+  radar.lossControl = clamp(100 - maxDD * 2, 0, 100);
+
+  // ---------- Activity（trades/day） ----------
+  const tpd = growth.tradesPerDay || 0;
+  let activityScore = 0;
+  if (tpd <= 0.5) activityScore = 30;
+  else if (tpd <= 1) activityScore = 60;
+  else if (tpd <= 3) activityScore = 80;
+  else activityScore = 100;
+  radar.activity = activityScore;
+
+  // ---------- Risk/Return Balance（CAGR / MaxDD） ----------
+  const cagr = growth.cagrPct || 0;
+  let rrScore = 0;
+  if (maxDD > 0) {
+    const ratio = cagr / maxDD;
+    // 粗略映射，你可以再 tune
+    rrScore = clamp(ratio * 100, 0, 100);
+  } else if (cagr > 0 && maxDD === 0) {
+    rrScore = 100;
+  }
+  radar.riskReturn = rrScore;
+
+  // ---------- Algo Quality（PF + Expectancy 綜合） ----------
+  const pf = risk.profitFactor || 0;
+  const exp = risk.expectancyPerTrade || 0;
+
+  // PF 部分（PF=2 左右 ≈ 60 分）
+  const pfScore = clamp((pf / 2) * 60, 0, 60);
+
+  // Expectancy 部分：你之後可以用「以平均虧損絕對值為 1R」去正規化
+  // 這度暫時 simple: exp 每 1 單位(貨幣) ≈ 10 分，上限 40 分
+  const expScore = clamp(exp * 10, -20, 40);
+
+  radar.algoQuality = clamp(pfScore + expScore, 0, 100);
+
+  return radar;
+}
