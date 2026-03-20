@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Signals Suite</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg-sidebar: #111827;
+      --bg-sidebar-active: #1f2937;
+      --bg-main: #0f172a;
+      --bg-header: #020617;
+      --bg-card: #020617;
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --accent: #22c55e;
+      --border-subtle: #1f2937;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .app-shell {
+      display: flex;
+      width: 100%;
+    }
+
+    /* Sidebar */
+
+    .sidebar {
+      width: 260px;
+      background: var(--bg-sidebar);
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border-subtle);
+    }
+
+    .sidebar-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sidebar-logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #22c55e, #06b6d4);
+    }
+
+    .sidebar-title {
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .sidebar-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: 12px 10px 16px;
+      overflow-y: auto;
+    }
+
+    .sidebar-section-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      padding: 10px 10px 4px;
+    }
+
+    .nav-item {
+      margin-bottom: 4px;
+    }
+
+    .nav-button {
+      width: 100%;
+      text-align: left;
+      border-radius: 8px;
+      padding: 8px 12px;
+      border: none;
+      background: transparent;
+      color: var(--text-main);
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+
+    .nav-button:hover {
+      background: rgba(148, 163, 184, 0.12);
+    }
+
+    .nav-button.active {
+      background: var(--bg-sidebar-active);
+      border-left: 3px solid var(--accent);
+      padding-left: 9px;
+    }
+
+    .nav-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      background: rgba(148, 163, 184, 0.25);
+    }
+
+    .nav-children {
+      margin-top: 4px;
+      margin-bottom: 4px;
+      padding-left: 26px;
+    }
+
+    .nav-child-btn {
+      width: 100%;
+      text-align: left;
+      padding: 5px 8px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .nav-child-btn:hover {
+      background: rgba(148, 163, 184, 0.10);
+      color: var(--text-main);
+    }
+
+    .nav-child-btn.active {
+      background: var(--bg-sidebar-active);
+      color: var(--accent);
+    }
+
+    .sidebar-footer {
+      padding: 10px 16px;
+      border-top: 1px solid var(--border-subtle);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Main content */
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .main-header {
+      height: 60px;
+      background: var(--bg-header);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+    }
+
+    .main-header-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .page-title {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .page-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .main-header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #020617;
+      border: 1px solid var(--border-subtle);
+      font-size: 12px;
+    }
+
+    .user-avatar {
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #22c55e, #06b6d4);
+    }
+
+    .main-body {
+      flex: 1;
+      padding: 16px 18px 20px;
+      overflow-y: auto;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border-radius: 12px;
+      border: 1px solid var(--border-subtle);
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .placeholder {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo"></div>
+        <div>
+          <div class="sidebar-title">AI Signals Suite</div>
+          <div class="sidebar-subtitle">Analyzer & FX Tools</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav" id="sidebarNav">
+        <!-- 這裏會用 JS 根據 sidebarMenu 渲染 -->
+      </nav>
+
+      <div class="sidebar-footer">
+        v0.1 • Dev Build
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <header class="main-header">
+        <div class="main-header-left">
+          <div class="page-title" id="pageTitle">Dashboard</div>
+          <div class="page-subtitle" id="pageSubtitle">Overview of accounts & tools</div>
+        </div>
+        <div class="main-header-right">
+          <span id="currentEnv">ENV: Dev</span>
+          <div class="user-pill">
+            <div class="user-avatar"></div>
+            <span id="userEmail">Guest</span>
+          </div>
+        </div>
+      </header>
+
+      <section class="main-body" id="mainBody">
+        <div class="card">
+          <div class="card-title">Content Placeholder</div>
+          <div class="placeholder">
+            揀左 sidebar 入面邊個項目，就喺呢度載入對應嘅 Trade Analyzer / FX Tools 畫面。
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // 簡化版 sidebarMenu（可替換成上面完整版本）
+    const sidebarMenu = [
+      {
+        id: "trade-analyzer",
+        label: "Trade Analyzer",
+        section: "analysis",
+        children: [
+          { id: "ta-overview", label: "Overview" },
+          { id: "ta-trades", label: "Trades" },
+          { id: "ta-symbols-ea", label: "Symbols & EAs" },
+          { id: "ta-time", label: "Time Analytics" },
+          { id: "ta-risk", label: "Risk & Drawdown" },
+          { id: "ta-martingale", label: "Martingale / Grid" }
+        ]
+      },
+      {
+        id: "fx-tools",
+        label: "FX Tools",
+        section: "tools",
+        children: [
+          { id: "fx-position", label: "Position & Risk" },
+          { id: "fx-margin", label: "Margin & Cost" },
+          { id: "fx-volatility", label: "Volatility Quick" }
+        ]
+      }
+    ];
+
+    const sidebarNav = document.getElementById('sidebarNav');
+    const pageTitle = document.getElementById('pageTitle');
+    const pageSubtitle = document.getElementById('pageSubtitle');
+    const mainBody = document.getElementById('mainBody');
+
+    function renderSidebar() {
+      sidebarNav.innerHTML = "";
+
+      sidebarMenu.forEach(group => {
+        const label = document.createElement('div');
+        label.className = 'sidebar-section-label';
+        label.textContent = group.label;
+        sidebarNav.appendChild(label);
+
+        const item = document.createElement('div');
+        item.className = 'nav-item';
+
+        const btn = document.createElement('button');
+        btn.className = 'nav-button';
+        btn.innerHTML = `
+          <span class="nav-label">
+            <span class="nav-icon"></span>
+            <span>${group.label}</span>
+          </span>
+        `;
+        item.appendChild(btn);
+
+        const childrenBox = document.createElement('div');
+        childrenBox.className = 'nav-children';
+
+        group.children.forEach(child => {
+          const cBtn = document.createElement('button');
+          cBtn.className = 'nav-child-btn';
+          cBtn.textContent = child.label;
+          cBtn.dataset.pageId = child.id;
+          cBtn.addEventListener('click', () => onSelectPage(group, child));
+          childrenBox.appendChild(cBtn);
+        });
+
+        item.appendChild(childrenBox);
+        sidebarNav.appendChild(item);
+      });
+    }
+
+    function onSelectPage(group, child) {
+      pageTitle.textContent = child.label;
+      pageSubtitle.textContent =
+        group.id === "trade-analyzer"
+          ? "Trade History Analyzer • " + child.label
+          : "FX Tools • " + child.label;
+
+      mainBody.innerHTML = `
+        <div class="card">
+          <div class="card-title">${child.label}</div>
+          <div class="placeholder">
+            呢度將來放 <b>${child.label}</b> 嘅真正內容（例如 Trades table、FX Cost Calculator）。
+          </div>
+        </div>
+      `;
+
+      document.querySelectorAll('.nav-child-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.pageId === child.id);
+      });
+    }
+
+    renderSidebar();
+  </script>
+</body>
+</html>
