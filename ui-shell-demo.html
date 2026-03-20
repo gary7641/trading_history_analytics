@@ -2,34 +2,58 @@
 <html lang="zh-HK">
 <head>
   <meta charset="UTF-8" />
-  <title>AI Signals Suite</title>
+  <title>AI Signals Suite Demo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     :root {
-      --bg-sidebar: #111827;
-      --bg-sidebar-active: #1f2937;
-      --bg-main: #0f172a;
-      --bg-header: #020617;
-      --bg-card: #020617;
-      --text-main: #e5e7eb;
-      --text-muted: #9ca3af;
+      /* 預設 Light Theme */
+      --bg-body: #f3f4f6;
+      --bg-sidebar: #ffffff;
+      --bg-sidebar-active: #e5e7eb;
+      --bg-header: #ffffff;
+      --bg-card: #ffffff;
+
+      --text-main: #111827;
+      --text-muted: #6b7280;
+
+      --border-subtle: #e5e7eb;
       --accent: #22c55e;
-      --border-subtle: #1f2937;
+      --accent-soft: rgba(34, 197, 94, 0.12);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root[data-theme="dark"] {
+      --bg-body: #020617;
+      --bg-sidebar: #030712;
+      --bg-sidebar-active: #111827;
+      --bg-header: #020617;
+      --bg-card: #020617;
+
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+
+      --border-subtle: #1f2937;
+      --accent: #22c55e;
+      --accent-soft: rgba(34, 197, 94, 0.16);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: var(--bg-main);
+      background: var(--bg-body);
       color: var(--text-main);
-      display: flex;
       min-height: 100vh;
+      display: flex;
     }
 
     .app-shell {
       display: flex;
       width: 100%;
+      min-height: 100vh;
     }
 
     /* Sidebar */
@@ -37,13 +61,13 @@
     .sidebar {
       width: 260px;
       background: var(--bg-sidebar);
+      border-right: 1px solid var(--border-subtle);
       display: flex;
       flex-direction: column;
-      border-right: 1px solid var(--border-subtle);
     }
 
     .sidebar-header {
-      padding: 16px 20px;
+      padding: 14px 18px;
       border-bottom: 1px solid var(--border-subtle);
       display: flex;
       align-items: center;
@@ -51,8 +75,8 @@
     }
 
     .sidebar-logo {
-      width: 28px;
-      height: 28px;
+      width: 26px;
+      height: 26px;
       border-radius: 8px;
       background: linear-gradient(135deg, #22c55e, #06b6d4);
     }
@@ -69,7 +93,7 @@
 
     .sidebar-nav {
       flex: 1;
-      padding: 12px 10px 16px;
+      padding: 10px 10px 14px;
       overflow-y: auto;
     }
 
@@ -89,7 +113,7 @@
       width: 100%;
       text-align: left;
       border-radius: 8px;
-      padding: 8px 12px;
+      padding: 7px 12px;
       border: none;
       background: transparent;
       color: var(--text-main);
@@ -101,7 +125,7 @@
     }
 
     .nav-button:hover {
-      background: rgba(148, 163, 184, 0.12);
+      background: rgba(148, 163, 184, 0.10);
     }
 
     .nav-button.active {
@@ -125,14 +149,14 @@
 
     .nav-children {
       margin-top: 4px;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
       padding-left: 26px;
     }
 
     .nav-child-btn {
       width: 100%;
       text-align: left;
-      padding: 5px 8px;
+      padding: 4px 8px;
       border-radius: 6px;
       border: none;
       background: transparent;
@@ -147,18 +171,21 @@
     }
 
     .nav-child-btn.active {
-      background: var(--bg-sidebar-active);
+      background: var(--accent-soft);
       color: var(--accent);
     }
 
     .sidebar-footer {
-      padding: 10px 16px;
+      padding: 8px 16px 10px;
       border-top: 1px solid var(--border-subtle);
       font-size: 11px;
       color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
-    /* Main content */
+    /* Main */
 
     .main {
       flex: 1;
@@ -168,7 +195,7 @@
     }
 
     .main-header {
-      height: 60px;
+      height: 56px;
       background: var(--bg-header);
       border-bottom: 1px solid var(--border-subtle);
       display: flex;
@@ -201,15 +228,33 @@
       color: var(--text-muted);
     }
 
+    .theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-card);
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    .theme-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
     .user-pill {
       display: flex;
       align-items: center;
       gap: 8px;
       padding: 4px 10px;
       border-radius: 999px;
-      background: #020617;
+      background: var(--bg-card);
       border: 1px solid var(--border-subtle);
-      font-size: 12px;
     }
 
     .user-avatar {
@@ -221,8 +266,14 @@
 
     .main-body {
       flex: 1;
-      padding: 16px 18px 20px;
+      padding: 14px 18px 20px;
       overflow-y: auto;
+    }
+
+    .grid-two {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+      gap: 14px;
     }
 
     .card {
@@ -233,15 +284,138 @@
       margin-bottom: 12px;
     }
 
+    .card-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
     .card-title {
       font-size: 13px;
       font-weight: 600;
-      margin-bottom: 8px;
+    }
+
+    .card-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .pill {
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border-subtle);
+      font-size: 10px;
+      color: var(--text-muted);
     }
 
     .placeholder {
       font-size: 12px;
       color: var(--text-muted);
+    }
+
+    .kpi-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .kpi {
+      flex: 1;
+      min-width: 120px;
+      background: rgba(148, 163, 184, 0.04);
+      border-radius: 8px;
+      padding: 8px 9px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .kpi-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .kpi-value {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .kpi-extra {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* FX Tools form */
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 10px;
+    }
+
+    .form-field {
+      margin-bottom: 8px;
+    }
+
+    .form-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 3px;
+    }
+
+    .form-input,
+    .form-select {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-card);
+      color: var(--text-main);
+      font-size: 12px;
+    }
+
+    .form-input:focus,
+    .form-select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent-soft);
+    }
+
+    .btn-primary {
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      background: var(--accent);
+      color: #ffffff;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.95;
+    }
+
+    .result-box {
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: rgba(34, 197, 94, 0.06);
+      border: 1px solid var(--accent-soft);
+      font-size: 12px;
+    }
+
+    .result-line {
+      margin-top: 3px;
+    }
+
+    @media (max-width: 900px) {
+      .sidebar {
+        width: 220px;
+      }
+      .grid-two {
+        grid-template-columns: minmax(0, 1fr);
+      }
     }
   </style>
 </head>
@@ -252,17 +426,16 @@
       <div class="sidebar-header">
         <div class="sidebar-logo"></div>
         <div>
-          <div class="sidebar-title">AI Signals Suite</div>
+          <div class="sidebar-title">AI Signal Suite</div>
           <div class="sidebar-subtitle">Analyzer & FX Tools</div>
         </div>
       </div>
 
-      <nav class="sidebar-nav" id="sidebarNav">
-        <!-- 這裏會用 JS 根據 sidebarMenu 渲染 -->
-      </nav>
+      <nav class="sidebar-nav" id="sidebarNav"></nav>
 
       <div class="sidebar-footer">
-        v0.1 • Dev Build
+        <span>v0.1 • Dev</span>
+        <span id="themeLabel">Light</span>
       </div>
     </aside>
 
@@ -270,11 +443,16 @@
     <main class="main">
       <header class="main-header">
         <div class="main-header-left">
-          <div class="page-title" id="pageTitle">Dashboard</div>
-          <div class="page-subtitle" id="pageSubtitle">Overview of accounts & tools</div>
+          <div class="page-title" id="pageTitle">Overview</div>
+          <div class="page-subtitle" id="pageSubtitle">
+            Trade History Analyzer • Overview
+          </div>
         </div>
         <div class="main-header-right">
-          <span id="currentEnv">ENV: Dev</span>
+          <button class="theme-toggle" id="themeToggle">
+            <span class="theme-dot"></span>
+            <span id="themeToggleText">Light</span>
+          </button>
           <div class="user-pill">
             <div class="user-avatar"></div>
             <span id="userEmail">Guest</span>
@@ -283,36 +461,35 @@
       </header>
 
       <section class="main-body" id="mainBody">
-        <div class="card">
-          <div class="card-title">Content Placeholder</div>
-          <div class="placeholder">
-            揀左 sidebar 入面邊個項目，就喺呢度載入對應嘅 Trade Analyzer / FX Tools 畫面。
-          </div>
-        </div>
+        <!-- 預設載入 Trade Analyzer Overview 示範 -->
       </section>
     </main>
   </div>
 
   <script>
-    // 簡化版 sidebarMenu（可替換成上面完整版本）
+    // 預設 Light
+    document.documentElement.setAttribute('data-theme', 'light');
+
+    // Sidebar menu 結構
     const sidebarMenu = [
       {
         id: "trade-analyzer",
         label: "Trade Analyzer",
-        section: "analysis",
+        section: "ANALYSIS",
         children: [
           { id: "ta-overview", label: "Overview" },
           { id: "ta-trades", label: "Trades" },
           { id: "ta-symbols-ea", label: "Symbols & EAs" },
           { id: "ta-time", label: "Time Analytics" },
           { id: "ta-risk", label: "Risk & Drawdown" },
-          { id: "ta-martingale", label: "Martingale / Grid" }
+          { id: "ta-martingale", label: "Martingale / Grid" },
+          { id: "ta-reports", label: "Reports & Export" }
         ]
       },
       {
         id: "fx-tools",
         label: "FX Tools",
-        section: "tools",
+        section: "TOOLS",
         children: [
           { id: "fx-position", label: "Position & Risk" },
           { id: "fx-margin", label: "Margin & Cost" },
@@ -325,6 +502,9 @@
     const pageTitle = document.getElementById('pageTitle');
     const pageSubtitle = document.getElementById('pageSubtitle');
     const mainBody = document.getElementById('mainBody');
+    const themeToggle = document.getElementById('themeToggle');
+    const themeToggleText = document.getElementById('themeToggleText');
+    const themeLabel = document.getElementById('themeLabel');
 
     function renderSidebar() {
       sidebarNav.innerHTML = "";
@@ -332,7 +512,7 @@
       sidebarMenu.forEach(group => {
         const label = document.createElement('div');
         label.className = 'sidebar-section-label';
-        label.textContent = group.label;
+        label.textContent = group.section;
         sidebarNav.appendChild(label);
 
         const item = document.createElement('div');
@@ -365,6 +545,155 @@
       });
     }
 
+    function renderTradeAnalyzerOverview() {
+      mainBody.innerHTML = `
+        <div class="card">
+          <div class="card-title-row">
+            <div>
+              <div class="card-title">Account Overview</div>
+              <div class="card-subtitle">Summary of selected MT4/MT5 report</div>
+            </div>
+            <span class="pill">Demo • History Analyzer</span>
+          </div>
+
+          <div class="kpi-row">
+            <div class="kpi">
+              <div class="kpi-label">Net Profit</div>
+              <div class="kpi-value">‑‑‑</div>
+              <div class="kpi-extra">Based on closed trades only</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Win Rate</div>
+              <div class="kpi-value">‑‑‑</div>
+              <div class="kpi-extra">Wins / Total trades</div>
+            </div>
+            <div class="kpi">
+              <div class="kpi-label">Max Drawdown</div>
+              <div class="kpi-value">‑‑‑</div>
+              <div class="kpi-extra">Equity peak to trough</div>
+            </div>
+          </div>
+
+          <div class="placeholder">
+            將來喺呢個 card 放 Account 概覽：Equity curve 小圖、時間範圍、總 trade 數等。
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title-row">
+            <div>
+              <div class="card-title">Recent Activity</div>
+              <div class="card-subtitle">Latest uploaded reports / accounts</div>
+            </div>
+          </div>
+          <div class="placeholder">
+            之後可以喺呢度列出最近分析過嘅報表、帳戶名、時間段等，方便快速切換。
+          </div>
+        </div>
+      `;
+    }
+
+    function renderFxMarginDemo() {
+      mainBody.innerHTML = `
+        <div class="grid-two">
+          <div class="card">
+            <div class="card-title-row">
+              <div>
+                <div class="card-title">FX Margin & Cost</div>
+                <div class="card-subtitle">手動輸入當前價格，計算保證金成本</div>
+              </div>
+              <span class="pill">Demo • Manual Price</span>
+            </div>
+
+            <div class="form-grid">
+              <div>
+                <div class="form-field">
+                  <div class="form-label">Currency Pair</div>
+                  <select id="fxPair" class="form-select">
+                    <option value="EURUSD" selected>EURUSD</option>
+                    <option value="GBPUSD">GBPUSD</option>
+                    <option value="AUDUSD">AUDUSD</option>
+                    <option value="USDJPY">USDJPY</option>
+                    <option value="XAUUSD">XAUUSD</option>
+                  </select>
+                </div>
+
+                <div class="form-field">
+                  <div class="form-label">Current Price</div>
+                  <input id="fxPrice" class="form-input" type="number" step="0.00001" value="1.1000" />
+                </div>
+
+                <div class="form-field">
+                  <div class="form-label">Contract Size</div>
+                  <input id="fxContract" class="form-input" type="number" value="100000" />
+                </div>
+
+                <div class="form-field">
+                  <div class="form-label">Leverage</div>
+                  <input id="fxLeverage" class="form-input" type="number" value="500" />
+                </div>
+
+                <div class="form-field">
+                  <div class="form-label">Lot Size</div>
+                  <input id="fxLots" class="form-input" type="number" step="0.01" value="0.01" />
+                </div>
+
+                <button class="btn-primary" id="fxCalcBtn">計算成本</button>
+              </div>
+
+              <div>
+                <div class="form-label">Result</div>
+                <div class="result-box" id="fxResult">
+                  請先輸入參數，然後按「計算成本」。
+                  <div class="result-line">Margin: ‑‑‑</div>
+                  <div class="result-line">Approx. USD Cost: ‑‑‑</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title-row">
+              <div>
+                <div class="card-title">Notes</div>
+                <div class="card-subtitle">之後可接 Yahoo / FX API 自動帶價</div>
+              </div>
+            </div>
+            <div class="placeholder">
+              呢個示範只用手動價位 + 合約大小 + 槓桿去計 margin。將來你可以喺
+              <code>fxPrice</code> 上面加一粒「Fetch Live」button，從 NAS / 第三方 API 取價再計。
+            </div>
+          </div>
+        </div>
+      `;
+
+      // 綁定計算 event
+      const btn = document.getElementById('fxCalcBtn');
+      const fxPair = document.getElementById('fxPair');
+      const fxPrice = document.getElementById('fxPrice');
+      const fxContract = document.getElementById('fxContract');
+      const fxLeverage = document.getElementById('fxLeverage');
+      const fxLots = document.getElementById('fxLots');
+      const fxResult = document.getElementById('fxResult');
+
+      btn.addEventListener('click', () => {
+        const price = parseFloat(fxPrice.value) || 0;
+        const contract = parseFloat(fxContract.value) || 0;
+        const leverage = parseFloat(fxLeverage.value) || 1;
+        const lots = parseFloat(fxLots.value) || 0;
+
+        const notional = contract * lots * price;
+        const margin = notional / leverage;
+
+        fxResult.innerHTML = `
+          Pair: <b>${fxPair.value}</b><br/>
+          <div class="result-line">Notional: ${notional.toFixed(2)} (approx.)</div>
+          <div class="result-line">Required Margin: <b>${margin.toFixed(2)} USD</b></div>
+          <div class="result-line">（之後可以再乘以 USD→HKD 匯率計 HKD 成本）</div>
+        `;
+      });
+    }
+
     function onSelectPage(group, child) {
       pageTitle.textContent = child.label;
       pageSubtitle.textContent =
@@ -372,21 +701,53 @@
           ? "Trade History Analyzer • " + child.label
           : "FX Tools • " + child.label;
 
-      mainBody.innerHTML = `
-        <div class="card">
-          <div class="card-title">${child.label}</div>
-          <div class="placeholder">
-            呢度將來放 <b>${child.label}</b> 嘅真正內容（例如 Trades table、FX Cost Calculator）。
+      if (group.id === "trade-analyzer" && child.id === "ta-overview") {
+        renderTradeAnalyzerOverview();
+      } else if (group.id === "fx-tools" && child.id === "fx-margin") {
+        renderFxMarginDemo();
+      } else {
+        mainBody.innerHTML = `
+          <div class="card">
+            <div class="card-title-row">
+              <div>
+                <div class="card-title">${child.label}</div>
+                <div class="card-subtitle">
+                  Placeholder：之後喺呢度放 <b>${child.label}</b> 真正內容。
+                </div>
+              </div>
+            </div>
+            <div class="placeholder">
+              你可以按需要將現有 Analyzer / FX Tools 對應功能搬入呢個 card。
+            </div>
           </div>
-        </div>
-      `;
+        `;
+      }
 
       document.querySelectorAll('.nav-child-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.pageId === child.id);
       });
     }
 
+    function initTheme() {
+      themeToggle.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme') || 'light';
+        const next = current === 'light' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', next);
+        themeToggleText.textContent = next === 'light' ? 'Light' : 'Dark';
+        themeLabel.textContent = next === 'light' ? 'Light' : 'Dark';
+      });
+    }
+
+    // 初始化
     renderSidebar();
+    initTheme();
+    // 預設載入 Trade Analyzer Overview
+    renderTradeAnalyzerOverview();
+    // 預設選中 ta-overview
+    setTimeout(() => {
+      const first = document.querySelector('.nav-child-btn[data-page-id="ta-overview"]');
+      if (first) first.classList.add('active');
+    }, 0);
   </script>
 </body>
 </html>
