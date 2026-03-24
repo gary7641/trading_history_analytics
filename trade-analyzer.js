@@ -1,12 +1,5 @@
 // trade-analyzer.js
-// v0.0260308003 + sort-by-closeTime (Perplexity整合版)
-
-// CSV → 帳戶摘要 + 圖表 + All Symbols / 各貨幣按鈕 +
-// 馬丁表(只限單一Symbol) + MFE/MAE (Pips / Money) + SWOT
-// + Symbol 累積 Profit 小圖 + Reset
-// + Symbol 深入分析：Cumulative / Weekday / Hourly Profit & Count
-// + Dark/Light Theme Switch + Cumulative All / Separate Switch
-// + 帳戶統計、Symbol 指標 2 行橫向排版
+// v0.0260308003 + sort-by-closeTime + sync body theme
 
 let globalTrades = [];
 let globalBySymbol = {};
@@ -23,20 +16,21 @@ let symbolCumulativeChart,
 let mfeMaeMode = "pips"; // "pips" | "money"
 let cumulativeMode = "all"; // "all" | "separate"
 
-// ---------- Theme Switch (Dark / Light) ----------
-// 勾 = dark，default = light
+// ---------- Theme Switch (跟 AI Signals Hub，用 body.data-theme) ----------
 (function setupThemeSwitch() {
-  const html = document.documentElement;
+  const body = document.body;
   const themeInput = document.getElementById("themeSwitch");
-  if (!themeInput) return;
+  if (!themeInput || !body) return;
 
-  const saved = localStorage.getItem("theme") || "light";
-  html.setAttribute("data-theme", saved);
+  // 跟 Hub：讀 body 上的 data-theme / localStorage，預設 light
+  const saved =
+    body.dataset.theme || localStorage.getItem("theme") || "light";
+  body.dataset.theme = saved;
   themeInput.checked = saved === "dark";
 
   themeInput.addEventListener("change", () => {
     const theme = themeInput.checked ? "dark" : "light";
-    html.setAttribute("data-theme", theme);
+    body.dataset.theme = theme;
     localStorage.setItem("theme", theme);
   });
 })();
@@ -448,7 +442,7 @@ function resetView() {
   const themeInput = document.getElementById("themeSwitch");
   if (themeInput) {
     themeInput.checked = false; // false = light
-    document.documentElement.setAttribute("data-theme", "light");
+    document.body.dataset.theme = "light";
     localStorage.setItem("theme", "light");
   }
 
@@ -552,7 +546,7 @@ function renderAccountCharts(acc) {
   if (symbolProfitChart) symbolProfitChart.destroy();
 
   const POS = "#22d3ee";
-  const NEG = "#ef4444";
+  const NEG = "#ef476f";
 
   equityChart = new Chart(ctx1, {
     type: "line",
@@ -1029,279 +1023,6 @@ function renderSymbolExtraCharts(symbol, trades) {
       scales: {
         x: { title: { display: true, text: "Hour" } },
         y: { title: { display: true, text: "Trades" }, beginAtZero: true }
-      }
-    }
-  });
-}
-
-// ---------- 馬丁 Table ----------
-function buildMartinForSymbol(symbolTrades) {
-  const map = {};
-  for (const t of symbolTrades) {
-    const key = `${t.symbol}|${t.type}|${t.lots.toFixed(2)}`;
-    if (!map[key]) {
-      map[key] = {
-        symbol: t.symbol,
-        side: t.type.toUpperCase(),
-        lots: t.lots,
-        tradeCount: 0,
-        sumProfit: 0,
-        sumPips: 0
-      };
-    }
-    const m = map[key];
-    m.tradeCount++;
-    m.sumProfit += t.netProfit;
-    m.sumPips += t.netPips;
-  }
-  const rows = Object.values(map);
-  const bySide = {};
-  for (const r of rows) {
-    const key = `${r.symbol}|${r.side}`;
-    if (!bySide[key]) bySide[key] = [];
-    bySide[key].push(r);
-  }
-
-  const tablePerSide = [];
-  const martinSummary = {
-    totalProfit: 0,
-    firstPositiveLevel: null,
-    maxLevel: 0,
-    worstSideNegative: null
-  };
-
-  for (const key of Object.keys(bySide)) {
-    const [symbol, side] = key.split("|");
-    const arr = bySide[key].sort((a, b) => a.lots - b.lots);
-    let totalProfit = 0;
-    let totalPips = 0;
-    let totalTrades = 0;
-    for (const r of arr) {
-      totalProfit += r.sumProfit;
-      totalPips += r.sumPips;
-      totalTrades += r.tradeCount;
-    }
-    let cum = 0;
-    let levelIndex = 0;
-    let firstPositiveLevel = null;
-    const rowsOut = [];
-
-    for (const r of arr) {
-      levelIndex++;
-      cum += r.sumProfit;
-      if (cum >= 0 && firstPositiveLevel == null)
-        firstPositiveLevel = levelIndex;
-
-      rowsOut.push({
-        symbol,
-        side,
-        level: levelIndex,
-        lots: r.lots,
-        levelTrades: r.tradeCount,
-        levelSumProfit: r.sumProfit,
-        levelSumPips: r.sumPips,
-        cumulativeProfit: cum,
-        totalProfit,
-        totalPips,
-        totalTrades
-      });
-    }
-
-    tablePerSide.push({
-      symbol,
-      side,
-      totalProfit,
-      totalPips,
-      totalTrades,
-      rows: rowsOut,
-      firstPositiveLevel,
-      maxLevel: levelIndex
-    });
-
-    martinSummary.totalProfit += totalProfit;
-    if (levelIndex > martinSummary.maxLevel)
-      martinSummary.maxLevel = levelIndex;
-
-    if (totalProfit < 0) {
-      martinSummary.worstSideNegative = {
-        symbol,
-        side,
-        totalProfit
-      };
-    }
-    if (
-      martinSummary.firstPositiveLevel == null &&
-      firstPositiveLevel != null
-    ) {
-      martinSummary.firstPositiveLevel = firstPositiveLevel;
-    } else if (
-      firstPositiveLevel != null &&
-      firstPositiveLevel <
-        (martinSummary.firstPositiveLevel || Number.MAX_SAFE_INTEGER)
-    ) {
-      martinSummary.firstPositiveLevel = firstPositiveLevel;
-    }
-  }
-
-  return { tablePerSide, martinSummary };
-}
-
-function renderMartinTables(symbol, tablePerSide) {
-  const container = document.getElementById("martinTables");
-  container.innerHTML = "";
-  tablePerSide.forEach((block) => {
-    const title = document.createElement("div");
-    title.className = "martin-header";
-    const totalClass =
-      block.totalProfit < 0 ? "row-total-negative" : "row-total-positive";
-    title.innerHTML = `${symbol} - ${block.side} (Total Profit: <span class="${totalClass}">${block.totalProfit.toFixed(
-      2
-    )}</span>, Trades: ${block.totalTrades})`;
-    container.appendChild(title);
-
-    const wrap = document.createElement("div");
-    wrap.className = "martin-table-wrapper";
-    const table = document.createElement("table");
-    table.className = "martin-table";
-
-    table.innerHTML = `
-      <thead>
-        <tr>
-          <th>層數</th>
-          <th>Lots</th>
-          <th>開單數量</th>
-          <th>該層SUM Profit</th>
-          <th>該層SUM Pips</th>
-          <th>由第1層累積Profit</th>
-          <th>Symbol+Side TOTAL Profit</th>
-          <th>Total Trades</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    `;
-
-    const tbody = table.querySelector("tbody");
-
-    block.rows.forEach((r) => {
-      const tr = document.createElement("tr");
-
-      let cls = "";
-      if (block.totalProfit < 0) {
-        cls = "row-total-negative";
-      } else if (block.firstPositiveLevel != null) {
-        if (r.level < block.firstPositiveLevel) cls = "level-risk";
-        else cls = "level-safe";
-      }
-      if (cls) tr.classList.add(cls);
-
-      tr.innerHTML = `
-        <td>${r.level}</td>
-        <td>${r.lots.toFixed(2)}</td>
-        <td>${r.levelTrades}</td>
-        <td>${r.levelSumProfit.toFixed(2)}</td>
-        <td>${r.levelSumPips.toFixed(1)}</td>
-        <td>${r.cumulativeProfit.toFixed(2)}</td>
-        <td>${r.totalProfit.toFixed(2)}</td>
-        <td>${r.totalTrades}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-
-    wrap.appendChild(table);
-    container.appendChild(wrap);
-  });
-}
-
-// ---------- MFE / MAE / Holding ----------
-function renderMfeMaeHoldingCharts(trades) {
-  const mfeCtx = document.getElementById("mfeChart").getContext("2d");
-  const maeCtx = document.getElementById("maeChart").getContext("2d");
-  const holdCtx = document.getElementById("holdingChart").getContext("2d");
-
-  if (mfeChart) mfeChart.destroy();
-  if (maeChart) maeChart.destroy();
-  if (holdingChart) holdingChart.destroy();
-
-  const xKey = mfeMaeMode === "pips" ? "netPips" : "netProfit";
-
-  const mfeData = trades.map((t) => ({
-    x: t[xKey],
-    y: t.mfe,
-    c: t.netProfit >= 0 ? "#16a34a" : "#dc2626"
-  }));
-  const maeData = trades.map((t) => ({
-    x: t[xKey],
-    y: t.mae,
-    c: t.netProfit >= 0 ? "#16a34a" : "#dc2626"
-  }));
-  const holdData = trades.map((t) => ({
-    x: t[xKey],
-    y: t.holdingDays,
-    c: t.netProfit >= 0 ? "#16a34a" : "#dc2626"
-  }));
-
-  const xTitle =
-    mfeMaeMode === "pips" ? "Result (Net Pips)" : "Result (Net Profit)";
-
-  mfeChart = new Chart(mfeCtx, {
-    type: "scatter",
-    data: {
-      datasets: [
-        {
-          label: "MFE vs Result",
-          data: mfeData,
-          backgroundColor: mfeData.map((d) => d.c)
-        }
-      ]
-    },
-    options: {
-      parsing: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { title: { display: true, text: xTitle } },
-        y: { title: { display: true, text: "MFE (pips)" } }
-      }
-    }
-  });
-
-  maeChart = new Chart(maeCtx, {
-    type: "scatter",
-    data: {
-      datasets: [
-        {
-          label: "MAE vs Result",
-          data: maeData,
-          backgroundColor: maeData.map((d) => d.c)
-        }
-      ]
-    },
-    options: {
-      parsing: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { title: { display: true, text: xTitle } },
-        y: { title: { display: true, text: "MAE (pips)" } }
-      }
-    }
-  });
-
-  holdingChart = new Chart(holdCtx, {
-    type: "scatter",
-    data: {
-      datasets: [
-        {
-          label: "Holding Time vs Result",
-          data: holdData,
-          backgroundColor: holdData.map((d) => d.c)
-        }
-      ]
-    },
-    options: {
-      parsing: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { title: { display: true, text: xTitle } },
-        y: { title: { display: true, text: "Holding Time (days)" } }
       }
     }
   });
