@@ -772,4 +772,17 @@ button {
       "ow";
     grid-template-columns: 1fr;
   }
+  
+/* Symbol charts 2x2 grid layout */
+.symbol-charts-grid-2x2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .symbol-charts-grid-2x2 {
+    grid-template-columns: 1fr;
+  }
+}
 }
