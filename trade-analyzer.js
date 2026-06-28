@@ -78,7 +78,7 @@ document.addEventListener("click", (e) => {
   const activeSymbolBtn = document.querySelector(".symbol-btn.active");
   const sym = activeSymbolBtn ? activeSymbolBtn.dataset.symbol : "ALL";
   const trades = sym === "ALL" ? globalTrades : globalBySymbol[sym] || [];
-  renderMfeMaeHoldingCharts(trades);
+    // renderMfeMaeHoldingCharts(trades);
 });
 
 function handleAnalyze() {
