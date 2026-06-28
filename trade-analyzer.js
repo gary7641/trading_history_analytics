@@ -714,7 +714,7 @@ function renderSymbol(symbol) {
   renderSymbolExtraCharts(symbol, trades);
 
   const swot = buildSwotForEA(globalEAKey, symbol, stats, martinSummary);
-  renderSwot(swot);
+    //   renderSwot(swot);
 }
 
 function renderSymbolStats(stats) {
