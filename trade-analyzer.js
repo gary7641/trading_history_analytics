@@ -25,13 +25,13 @@ let cumulativeMode = "all"; // "all" | "separate"
 
   // 跟 Hub：讀 body 上的 data-theme / localStorage，預設 light
   const saved =
-    body.dataset.theme || localStorage.getItem("theme") || "light";
-  body.dataset.theme = saved;
+    document.documentElement.dataset.theme || localStorage.getItem("theme") || "light";
+  document.documentElement.dataset.theme = saved;
   themeInput.checked = saved === "dark";
 
   themeInput.addEventListener("change", () => {
     const theme = themeInput.checked ? "dark" : "light";
-    body.dataset.theme = theme;
+    document.documentElement.dataset.theme = theme;
     localStorage.setItem("theme", theme);
   });
 })();
@@ -446,7 +446,7 @@ function resetView() {
   const themeInput = document.getElementById("themeSwitch");
   if (themeInput) {
     themeInput.checked = false; // false = light
-    document.body.dataset.theme = "light";
+    document.document.documentElement.dataset.theme = "light";
     localStorage.setItem("theme", "light");
   }
 
