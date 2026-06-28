@@ -339,6 +339,9 @@ function buildAll() {
 
 function resetView() {
   globalTrades = [];
+    // Show MAE/MFE and Drawdown sections
+  document.getElementById("maeMfeSection").style.display = "block";
+  document.getElementById("drawdownSection").style.display = "block";
   globalBySymbol = {};
   globalEAKey = "SMA";
   mfeMaeMode = "pips";
