@@ -710,7 +710,7 @@ function renderSymbol(symbol) {
     document.getElementById("martinSection").style.display = "none";
   }
 
-  renderMfeMaeHoldingCharts(trades);
+  //   renderMfeMaeHoldingCharts(trades);
   renderSymbolExtraCharts(symbol, trades);
 
   const swot = buildSwotForEA(globalEAKey, symbol, stats, martinSummary);
