@@ -1,4 +1,5 @@
 // trade-analyzer.js
+
 // v0.0260308003 + sort-by-closeTime + sync body theme
 
 let globalTrades = [];
