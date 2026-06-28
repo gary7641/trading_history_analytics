@@ -53,41 +53,104 @@
       </div>
 
       <div class="field">
-        <label for="eaType">EA 類型</label>
-        <select id="eaType">
+        <label for="eaSelect">EA 類型</label>
+        <select id="eaSelect">
           <option value="SMA">SMA (Standard)</option>
-          <option value="6MA">6MA (Martingale)</option>
+          <option value="SMA_Pro">SMA Pro</option>
+          <option value="MKD">MKD (Standard)</option>
+          <option value="MKD_Pro">MKD Pro</option>
+          <option value="Flash">Flash (Standard)</option>
+          <option value="Flash_Pro">Flash Pro</option>
+          <option value="S10">S10 (Standard)</option>
+          <option value="S10_Pro">S10 Pro</option>
+          <option value="OtherBasic">Other EA (Basic)</option>
+          <option value="OtherPro">Other EA (Pro)</option>
         </select>
       </div>
 
-      <div class="button-group">
-        <button id="analyzeBtn" class="btn-primary">🚀 開始分析</button>
-        <button id="resetBtn" class="btn-secondary">Reset</button>
+      <div class="upload-buttons">
+        <button id="analyzeBtn" class="primary">
+          <span class="rocket">🚀</span>
+          <span>開始分析</span>
+        </button>
+        <button id="resetBtn" class="secondary">Reset</button>
       </div>
     </div>
   </section>
 
-  <!-- 2. 帳戶總覽 Summary -->
+  <!-- 2. 帳戶 Summary Cards -->
   <section id="summaryCardsSection" class="panel" style="display:none;">
-    <div class="collapsible-header" data-target="summaryBody">
+    <div class="collapsible-header" data-target="summaryCardsBody">
       <h2>2. 帳戶總覽 Summary</h2>
-      <span class="collapse-toggle">-</span>
+      <span class="collapse-toggle">－</span>
     </div>
-    <div id="summaryBody" class="collapsible-body">
-      <div class="summary-cards-grid">
+    <div id="summaryCardsBody" class="collapsible-body">
+      <div class="summary-grid">
         <div class="summary-card">
-          <h3>成長 &amp; 期間</h3>
-          <div id="growthValue" class="growth-value"></div>
-          <div id="growthDetails"></div>
-          <div id="eaRadarContainer" class="ea-radar-container"></div>
+          <h3>成長 & 期間</h3>
+          <div class="summary-value" id="growthValue">0 %</div>
+          <div class="summary-sub" id="growthPeriod"></div>
+
+          <div class="summary-row">
+            <span>Algo</span>
+            <span id="radarAlgo">EA Radar</span>
+          </div>
+          <div class="summary-row">
+            <span>勝率</span>
+            <span id="radarProfitTrades"></span>
+          </div>
+          <div class="summary-row">
+            <span>虧損率</span>
+            <span id="radarLossTrades"></span>
+          </div>
+          <div class="summary-row">
+            <span>Max DD</span>
+            <span id="radarMaxDD"></span>
+          </div>
+          <div class="summary-row">
+            <span>PF</span>
+            <span id="radarPF"></span>
+          </div>
+          <div class="summary-row">
+            <span>活動度</span>
+            <span id="radarActivity"></span>
+          </div>
         </div>
+
         <div class="summary-card">
           <h3>Equity / Profit</h3>
-          <div id="equityBarContainer"></div>
+          <div class="summary-row">
+            <span>Initial Deposit</span>
+            <span id="initialDepositValue">0.00</span>
+          </div>
+
+          <div class="bar-group">
+            <div class="bar-label">Equity</div>
+            <div class="bar-track">
+              <div id="equityBar" class="bar-fill"></div>
+            </div>
+          </div>
+
+          <div class="bar-group">
+            <div class="bar-label">Profit</div>
+            <div class="bar-track">
+              <div id="profitBar" class="bar-fill bar-profit"></div>
+            </div>
+          </div>
+
+          <div class="summary-row" style="margin-top:6px;">
+            <span>Equity</span>
+            <span id="equityValue">0.00</span>
+          </div>
+          <div class="summary-row">
+            <span>Profit</span>
+            <span id="profitValue">0.00</span>
+          </div>
         </div>
+
         <div class="summary-card">
           <h3>Minimum Area (Key Stats)</h3>
-          <div id="minimumAreaStats"></div>
+          <div id="minimumArea"></div>
         </div>
       </div>
     </div>
@@ -97,102 +160,109 @@
   <section id="accountSection" class="panel" style="display:none;">
     <div class="collapsible-header" data-target="accountBody">
       <h2>3. 帳戶總體分析</h2>
-      <span class="collapse-toggle">-</span>
+      <span class="collapse-toggle">－</span>
     </div>
     <div id="accountBody" class="collapsible-body">
-      <div class="account-stats-row">
-        <div id="accountStats" class="account-stats-box"></div>
+      <div class="account-layout">
+        <div class="account-stats">
+          <h3>帳戶統計</h3>
+          <div id="accountStats"></div>
+        </div>
 
-        <!-- Equity Curve 全寬 + DD -->
-        <div class="equity-curve-full">
-          <div class="chart-title-row">
-            <h3 class="chart-title">Equity Curve</h3>
-            <div class="equity-dd-toggle">
-              <label class="dd-toggle-label">
-                <input type="checkbox" id="showDDToggle" checked />
-                <span>顯示 DD</span>
-              </label>
-            </div>
+        <div class="account-charts">
+          <div class="chart-card">
+            <h3>Equity Curve</h3>
+            <canvas id="equityChart"></canvas>
           </div>
-          <canvas id="equityChart"></canvas>
-          <canvas id="ddChart" style="margin-top:8px;"></canvas>
-        </div>
-      </div>
-
-      <div class="account-charts-row">
-        <div class="chart-box">
-          <h3 class="chart-title">Weekday Trades</h3>
-          <canvas id="weekdayChart"></canvas>
-        </div>
-        <div class="chart-box">
-          <h3 class="chart-title">Symbol Profit 排名</h3>
-          <canvas id="symbolProfitChart"></canvas>
+          <div class="chart-card">
+            <h3>Weekday Trades</h3>
+            <canvas id="weekdayChart"></canvas>
+          </div>
+          <div class="chart-card">
+            <h3>Symbol Profit 排名</h3>
+            <canvas id="symbolProfitChart"></canvas>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- 4. Symbol 一覽與 Mini Equity -->
+  <!-- 4. Symbol Buttons + Mini Charts -->
   <section id="symbolSection" class="panel" style="display:none;">
     <div class="collapsible-header" data-target="symbolBody">
       <h2>4. Symbol 一覽與 Mini Equity</h2>
-      <span class="collapse-toggle">-</span>
+      <span class="collapse-toggle">－</span>
     </div>
     <div id="symbolBody" class="collapsible-body">
-      <div id="symbolBtnContainer" class="symbol-btn-container"></div>
-      <h3 class="section-subtitle">Symbol 累積 Profit 小圖</h3>
-      <div id="miniChartsContainer" class="mini-charts-container"></div>
+      <div>
+        <h3>Symbols</h3>
+        <div id="symbolButtons" class="symbol-buttons"></div>
+      </div>
+
+      <div style="margin-top:10px;">
+        <h3>Symbol 累積 Profit 小圖</h3>
+        <div id="symbolMiniCharts" class="mini-chart-grid"></div>
+      </div>
     </div>
   </section>
 
-  <!-- 5. Symbol 深入分析 -->
-  <section id="symbolExtraSection" class="panel" style="display:none;">
-    <div class="collapsible-header" data-target="symbolExtraBody">
-      <h2>5. Symbol 深入分析 <span id="symbolExtraTitle"></span></h2>
-      <span class="collapse-toggle">-</span>
+  <!-- 5. Symbol 深入分析 📊 -->
+  <section id="symbolDetailSection" class="panel" style="display:none;">
+    <div class="collapsible-header" data-target="symbolDetailBody">
+      <h2 id="symbolTitle">5. Symbol 深入分析 📊</h2>
+      <span class="collapse-toggle">－</span>
     </div>
-    <div id="symbolExtraBody" class="collapsible-body">
-      <div class="symbol-extra-controls">
-        <div class="ea-badge" id="eaBadge"></div>
-        <label class="cum-switch-label">
-          All
-          <label class="switch">
+    <div id="symbolDetailBody" class="collapsible-body">
+
+      <!-- 上：Symbol 指標 + EA + Switches -->
+      <div class="symbol-summary-grid">
+        <div class="symbol-summary-main">
+          <h3>Symbol 指標</h3>
+          <div id="symbolStats"></div>
+        </div>
+        <div class="symbol-summary-ea">
+          <span id="eaTag" class="ea-tag">EA</span>
+          <div id="eaCenterAnalysis"></div>
+        </div>
+        <div class="symbol-summary-switches">
+          <span class="switch-text-left">All</span>
+          <label class="switch" id="cumSwitchWrapper" style="display:none;">
             <input type="checkbox" id="cumSwitch" />
             <span class="slider"></span>
           </label>
-          Separate
-        </label>
+          <span class="switch-text-right">Separate</span>
+        </div>
       </div>
 
-      <div id="symbolStatsRow" class="symbol-stats-row"></div>
-
-      <!-- Symbol 指標：大圖上方全寬，4幅細圖下方 2x2 -->
-      <div class="symbol-charts-wrap">      <div class="symbol-charts-wrap">
-        <!-- Top: Cumulative Profit Chart (Full Width) -->
-        <div class="chart-card" style="margin-bottom: 1rem;">
+      <!-- 下：圖表 layout -->
+      <div class="symbol-charts-layout">
+        <div class="symbol-charts-left">
           <div class="chart-title-row">
             <h3 class="chart-title">Cumulative Profit</h3>
           </div>
           <canvas id="symbolCumulativeChart"></canvas>
         </div>
-        
-        <!-- Bottom: 2x2 Grid for Weekday and Hourly Charts -->
-        <div class="symbol-charts-grid-2x2">
-          <div class="chart-card">
-            <h4 class="chart-title">Weekday Profit</h4>
-            <canvas id="symbolWeekdayProfitChart"></canvas>
+
+        <div class="symbol-charts-right">
+          <div class="symbol-charts-row">
+            <div class="chart-box">
+              <h3 class="chart-title">Weekday Profit</h3>
+              <canvas id="symbolWeekdayProfitChart"></canvas>
+            </div>
+            <div class="chart-box">
+              <h3 class="chart-title">Weekday Trades</h3>
+              <canvas id="symbolWeekdayCountChart"></canvas>
+            </div>
           </div>
-          <div class="chart-card">
-            <h4 class="chart-title">Weekday Trades</h4>
-            <canvas id="symbolWeekdayCountChart"></canvas>
-          </div>
-          <div class="chart-card">
-            <h4 class="chart-title">Hourly Profit</h4>
-            <canvas id="symbolHourlyProfitChart"></canvas>
-          </div>
-          <div class="chart-card">
-            <h4 class="chart-title">Hourly Trades</h4>
-            <canvas id="symbolHourlyCountChart"></canvas>
+          <div class="symbol-charts-row">
+            <div class="chart-box">
+              <h3 class="chart-title">Hourly Profit</h3>
+              <canvas id="symbolHourlyProfitChart"></canvas>
+            </div>
+            <div class="chart-box">
+              <h3 class="chart-title">Hourly Trades</h3>
+              <canvas id="symbolHourlyCountChart"></canvas>
+            </div>
           </div>
         </div>
       </div>
@@ -203,7 +273,7 @@
   <section id="martinSection" class="panel" style="display:none;">
     <div class="collapsible-header" data-target="martinBody">
       <h2>6. 馬丁層數分析</h2>
-      <span class="collapse-toggle">-</span>
+      <span class="collapse-toggle">－</span>
     </div>
     <div id="martinBody" class="collapsible-body">
       <div id="martinTables"></div>
@@ -214,7 +284,7 @@
   <section id="swotSection" class="panel" style="display:none;">
     <div class="collapsible-header" data-target="swotBody">
       <h2>7. EA SWOT 分析</h2>
-      <span class="collapse-toggle">-</span>
+      <span class="collapse-toggle">－</span>
     </div>
     <div id="swotBody" class="collapsible-body">
       <div class="swot-layout">
@@ -235,57 +305,8 @@
     </div>
   </section>
 
-      <!-- 8. MAE/MFE 分析 -->
-    <section id="maeMfeSection" class="panel" style="display:none;">
-      <div class="collapsible-header" data-target="maeMfeBody">
-        <h2>8. MAE/MFE 分析</h2>
-        <span class="collapse-toggle">－</span>
-      </div>
-      <div id="maeMfeBody" class="collapsible-body">
-        <div class="toggle-group" style="margin-bottom: 1rem;">
-          <button class="toggle-mode active" data-mode="pips">Pips</button>
-          <button class="toggle-mode" data-mode="money">Money</button>
-        </div>
-        <div class="symbol-charts-grid-2x2">
-          <div class="chart-card">
-            <h4 class="chart-title">MAE (Maximum Adverse Excursion)</h4>
-            <canvas id="maeChart"></canvas>
-          </div>
-          <div class="chart-card">
-            <h4 class="chart-title">MFE (Maximum Favorable Excursion)</h4>
-            <canvas id="mfeChart"></canvas>
-          </div>
-          <div class="chart-card" style="grid-column: 1 / -1;">
-            <h4 class="chart-title">Holding Time Distribution</h4>
-            <canvas id="holdingChart"></canvas>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 9. Drawdown 分析 -->
-    <section id="drawdownSection" class="panel" style="display:none;">
-      <div class="collapsible-header" data-target="drawdownBody">
-        <h2>9. Drawdown 分析</h2>
-        <span class="collapse-toggle">－</span>
-      </div>
-      <div id="drawdownBody" class="collapsible-body">
-        <div class="toggle-group" style="margin-bottom: 1rem;">
-          <button class="toggle-dd active" data-dd="equity">Equity DD</button>
-          <button class="toggle-dd" data-dd="balance">Balance DD</button>
-        </div>
-        <div class="chart-card">
-          <h4 class="chart-title">Drawdown Curve</h4>
-          <canvas id="drawdownChart"></canvas>
-        </div>
-      </div>
-    </section>
-
-
   <!-- JS -->
   <script src="ea-rules.js"></script>
-  <script src="app.js"></script>
-  <script src="main.js"></script>
   <script src="trade-analyzer.js"></script>
 </body>
 </html>
